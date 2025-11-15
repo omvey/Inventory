@@ -5,6 +5,7 @@ import datetime
 from datetime import datetime as dt
 import json
 import io
+import os
 
 # Konfigurasi halaman
 st.set_page_config(
@@ -14,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk tampilan lebih baik
+# Custom CSS
 st.markdown("""
 <style>
     .main-header {
@@ -29,20 +30,14 @@ st.markdown("""
         border-radius: 10px;
         margin: 1rem 0;
     }
-    .positive {
-        color: #00aa00;
-        font-weight: bold;
-    }
-    .negative {
-        color: #ff4b4b;
-        font-weight: bold;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# Fungsi database
+# Fungsi database - FIXED untuk Railway
 def init_database():
-    conn = sqlite3.connect('pembukuan.db')
+    # Gunakan path absolute untuk database
+    db_path = os.path.join(os.getcwd(), 'pembukuan.db')
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS transaksi (
@@ -59,32 +54,40 @@ def init_database():
     conn.close()
 
 def get_connection():
-    return sqlite3.connect('pembukuan.db')
+    db_path = os.path.join(os.getcwd(), 'pembukuan.db')
+    return sqlite3.connect(db_path, check_same_thread=False)
 
 # Inisialisasi database
 init_database()
 
-# Sidebar untuk navigasi
+# Sidebar navigation
 st.sidebar.title("📊 Menu Navigasi")
 menu = st.sidebar.radio(
     "Pilih Menu:",
     ["🏠 Dashboard", "➕ Tambah Transaksi", "📋 Lihat Transaksi", "📈 Laporan", "⚙️ Export Data"]
 )
 
-# Header utama
+# Header
 st.markdown('<div class="main-header">💼 Pembukuan Usaha Online</div>', unsafe_allow_html=True)
 
-# Session state untuk menyimpan data sementara
+# Session state
 if 'transaksi_df' not in st.session_state:
     conn = get_connection()
-    st.session_state.transaksi_df = pd.read_sql('SELECT * FROM transaksi ORDER BY tanggal DESC', conn)
-    conn.close()
+    try:
+        st.session_state.transaksi_df = pd.read_sql('SELECT * FROM transaksi ORDER BY tanggal DESC', conn)
+    except:
+        st.session_state.transaksi_df = pd.DataFrame()
+    finally:
+        conn.close()
 
-# Fungsi untuk refresh data
 def refresh_data():
     conn = get_connection()
-    st.session_state.transaksi_df = pd.read_sql('SELECT * FROM transaksi ORDER BY tanggal DESC', conn)
-    conn.close()
+    try:
+        st.session_state.transaksi_df = pd.read_sql('SELECT * FROM transaksi ORDER BY tanggal DESC', conn)
+    except:
+        st.session_state.transaksi_df = pd.DataFrame()
+    finally:
+        conn.close()
 
 # 1. DASHBOARD
 if menu == "🏠 Dashboard":
@@ -108,27 +111,14 @@ if menu == "🏠 Dashboard":
         with col2:
             st.metric("Total Pengeluaran", f"Rp {total_pengeluaran:,}")
         with col3:
-            st.metric("Saldo", f"Rp {saldo:,}", delta=f"Rp {saldo:,}" if saldo >= 0 else f"-Rp {abs(saldo):,}")
+            st.metric("Saldo", f"Rp {saldo:,}")
         with col4:
             st.metric("Total Transaksi", total_transaksi)
         
-        # Chart bulanan
-        st.subheader("📈 Trend Bulanan")
-        
-        df['tanggal'] = pd.to_datetime(df['tanggal'])
-        df['bulan_tahun'] = df['tanggal'].dt.to_period('M')
-        
-        monthly_data = df.groupby(['bulan_tahun', 'jenis'])['jumlah'].sum().unstack(fill_value=0)
-        monthly_data = monthly_data.reset_index()
-        monthly_data['bulan_tahun'] = monthly_data['bulan_tahun'].astype(str)
-        
-        if not monthly_data.empty:
-            st.line_chart(monthly_data.set_index('bulan_tahun'))
-        
         # Transaksi terbaru
-        st.subheader("🆕 Transaksi Terbaru")
+        st.subheader("🆕 5 Transaksi Terbaru")
         st.dataframe(
-            df.head(10)[['tanggal', 'keterangan', 'kategori', 'jenis', 'jumlah']],
+            df.head(5)[['tanggal', 'keterangan', 'kategori', 'jenis', 'jumlah']],
             use_container_width=True
         )
 
@@ -167,17 +157,20 @@ elif menu == "➕ Tambah Transaksi":
                 conn = get_connection()
                 c = conn.cursor()
                 
-                c.execute('''
-                    INSERT INTO transaksi (tanggal, keterangan, kategori, jenis, jumlah)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (tanggal.strftime("%Y-%m-%d"), keterangan, kategori, jenis, jumlah))
-                
-                conn.commit()
-                conn.close()
-                
-                refresh_data()
-                st.success(f"✅ Transaksi berhasil ditambahkan!")
-                st.balloons()
+                try:
+                    c.execute('''
+                        INSERT INTO transaksi (tanggal, keterangan, kategori, jenis, jumlah)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (tanggal.strftime("%Y-%m-%d"), keterangan, kategori, jenis, jumlah))
+                    
+                    conn.commit()
+                    refresh_data()
+                    st.success(f"✅ Transaksi berhasil ditambahkan!")
+                    st.balloons()
+                except Exception as e:
+                    st.error(f"❌ Error: {e}")
+                finally:
+                    conn.close()
 
 # 3. LIHAT TRANSAKSI
 elif menu == "📋 Lihat Transaksi":
@@ -189,28 +182,16 @@ elif menu == "📋 Lihat Transaksi":
         df = st.session_state.transaksi_df
         
         # Filter options
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         
         with col1:
             filter_jenis = st.selectbox("Filter Jenis", ["Semua", "Pemasukan", "Pengeluaran"])
-        with col2:
-            start_date = st.date_input("Dari Tanggal", 
-                                     value=df['tanggal'].min() if not df.empty else datetime.date.today())
-        with col3:
-            end_date = st.date_input("Sampai Tanggal", 
-                                   value=df['tanggal'].max() if not df.empty else datetime.date.today())
         
         # Apply filters
         filtered_df = df.copy()
-        filtered_df['tanggal'] = pd.to_datetime(filtered_df['tanggal'])
         
         if filter_jenis != "Semua":
             filtered_df = filtered_df[filtered_df['jenis'] == filter_jenis]
-        
-        filtered_df = filtered_df[
-            (filtered_df['tanggal'].dt.date >= start_date) & 
-            (filtered_df['tanggal'].dt.date <= end_date)
-        ]
         
         st.subheader(f"📊 {len(filtered_df)} Transaksi Ditemukan")
         
@@ -219,17 +200,6 @@ elif menu == "📋 Lihat Transaksi":
             filtered_df[['tanggal', 'keterangan', 'kategori', 'jenis', 'jumlah']],
             use_container_width=True
         )
-        
-        # Summary filtered
-        if not filtered_df.empty:
-            total_filtered_pemasukan = filtered_df[filtered_df['jenis'] == 'Pemasukan']['jumlah'].sum()
-            total_filtered_pengeluaran = filtered_df[filtered_df['jenis'] == 'Pengeluaran']['jumlah'].sum()
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.info(f"**Total Pemasukan:** Rp {total_filtered_pemasukan:,}")
-            with col2:
-                st.info(f"**Total Pengeluaran:** Rp {total_filtered_pengeluaran:,}")
 
 # 4. LAPORAN
 elif menu == "📈 Laporan":
@@ -239,57 +209,18 @@ elif menu == "📈 Laporan":
         st.info("Belum ada data untuk laporan.")
     else:
         df = st.session_state.transaksi_df
-        df['tanggal'] = pd.to_datetime(df['tanggal'])
         
-        # Pilihan periode
-        col1, col2 = st.columns(2)
-        with col1:
-            tahun = st.selectbox("Pilih Tahun", sorted(df['tanggal'].dt.year.unique(), reverse=True))
-        with col2:
-            bulan = st.selectbox("Pilih Bulan", [
-                "Semua", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ])
+        # Ringkasan
+        st.subheader("📋 Ringkasan")
         
-        # Filter data berdasarkan pilihan
-        filtered_df = df[df['tanggal'].dt.year == tahun]
+        pemasukan = df[df['jenis'] == 'Pemasukan']['jumlah'].sum()
+        pengeluaran = df[df['jenis'] == 'Pengeluaran']['jumlah'].sum()
+        saldo = pemasukan - pengeluaran
         
-        if bulan != "Semua":
-            bulan_num = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ].index(bulan) + 1
-            filtered_df = filtered_df[filtered_df['tanggal'].dt.month == bulan_num]
-        
-        if not filtered_df.empty:
-            # Ringkasan
-            st.subheader("📋 Ringkasan")
-            
-            pemasukan = filtered_df[filtered_df['jenis'] == 'Pemasukan']['jumlah'].sum()
-            pengeluaran = filtered_df[filtered_df['jenis'] == 'Pengeluaran']['jumlah'].sum()
-            saldo = pemasukan - pengeluaran
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total Pemasukan", f"Rp {pemasukan:,}")
-            col2.metric("Total Pengeluaran", f"Rp {pengeluaran:,}")
-            col3.metric("Saldo", f"Rp {saldo:,}")
-            
-            # Chart by kategori
-            st.subheader("📊 Breakdown by Kategori")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                pemasukan_by_kategori = filtered_df[filtered_df['jenis'] == 'Pemasukan'].groupby('kategori')['jumlah'].sum()
-                if not pemasukan_by_kategori.empty:
-                    st.write("**Pemasukan by Kategori:**")
-                    st.dataframe(pemasukan_by_kategori)
-            
-            with col2:
-                pengeluaran_by_kategori = filtered_df[filtered_df['jenis'] == 'Pengeluaran'].groupby('kategori')['jumlah'].sum()
-                if not pengeluaran_by_kategori.empty:
-                    st.write("**Pengeluaran by Kategori:**")
-                    st.dataframe(pengeluaran_by_kategori)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Pemasukan", f"Rp {pemasukan:,}")
+        col2.metric("Total Pengeluaran", f"Rp {pengeluaran:,}")
+        col3.metric("Saldo", f"Rp {saldo:,}")
 
 # 5. EXPORT DATA
 elif menu == "⚙️ Export Data":
@@ -308,12 +239,6 @@ elif menu == "⚙️ Export Data":
                 buffer = io.BytesIO()
                 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                     df.to_excel(writer, sheet_name='Transaksi', index=False)
-                    
-                    # Auto-adjust columns' width
-                    worksheet = writer.sheets['Transaksi']
-                    for i, col in enumerate(df.columns):
-                        column_len = max(df[col].astype(str).str.len().max(), len(col)) + 2
-                        worksheet.set_column(i, i, column_len)
                 
                 st.download_button(
                     label="⬇️ Download Excel File",
@@ -332,17 +257,6 @@ elif menu == "⚙️ Export Data":
                     file_name=f"pembukuan_{dt.now().strftime('%Y%m%d_%H%M')}.csv",
                     mime="text/csv"
                 )
-        
-        # Backup JSON
-        st.subheader("🔄 Backup Data")
-        if st.button("💾 Generate Backup"):
-            backup_data = df.to_dict('records')
-            st.download_button(
-                label="⬇️ Download Backup JSON",
-                data=json.dumps(backup_data, indent=2),
-                file_name=f"backup_pembukuan_{dt.now().strftime('%Y%m%d_%H%M')}.json",
-                mime="application/json"
-            )
 
 # Footer
 st.markdown("---")
