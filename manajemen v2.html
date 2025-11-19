@@ -378,55 +378,6 @@
             font-size: 14px;
         }
 
-        .logout-btn {
-            background: linear-gradient(to right, #F09570, #FE6E81);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(240, 149, 112, 0.3);
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 1000;
-            transform: translateX(150%);
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            border-left: 4px solid #4CAF50;
-        }
-
-        .notification.error {
-            border-left: 4px solid #f44336;
-        }
-
-        .notification-icon {
-            font-size: 20px;
-        }
-
         .laporan-table {
             width: 100%;
             border-collapse: collapse;
@@ -462,6 +413,38 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f44336;
+        }
+
+        .notification-icon {
+            font-size: 20px;
         }
 
         /* Responsive */
@@ -504,30 +487,8 @@
     </style>
 </head>
 <body>
-    <!-- Halaman Login -->
-    <div class="page active" id="login-page">
-        <div class="logo">
-            <h1>SISTEM MANAJEMEN KEUANGAN</h1>
-        </div>
-        
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" placeholder="Masukkan username" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Masukkan password" required>
-        </div>
-        
-        <button class="submit-btn" onclick="login()" id="login-btn">
-            <span id="login-text">MASUK</span>
-            <span id="login-loading" class="loading" style="display: none;"></span>
-        </button>
-    </div>
-
     <!-- Halaman Setup Perusahaan -->
-    <div class="page" id="setup-page">
+    <div class="page active" id="setup-page">
         <div class="logo">
             <h1>SETUP PERUSAHAAN</h1>
             <h2>Lengkapi informasi perusahaan Anda</h2>
@@ -563,10 +524,13 @@
                 <div class="user-avatar" id="user-avatar">BP</div>
                 <div class="user-details">
                     <h3 id="company-name">Berkah Dua Putri</h3>
-                    <p>Terakhir login: <span id="last-login"></span></p>
+                    <p>Sistem Manajemen Keuangan</p>
                 </div>
             </div>
-            <button class="logout-btn" onclick="logout()">Keluar</button>
+        </div>
+        
+        <div class="logo">
+            <h1>MANAJEMEN KEUANGAN</h1>
         </div>
         
         <div class="button-container">
@@ -597,6 +561,10 @@
         <button class="back-btn" onclick="showPage('main-page')">
             <span>←</span> Kembali
         </button>
+        
+        <div class="logo">
+            <h1>BUAT NOTA PENJUALAN</h1>
+        </div>
         
         <form id="nota-form">
             <div class="form-group">
@@ -635,9 +603,20 @@
                 <span id="nota-submit-loading" class="loading" style="display: none;"></span>
             </button>
         </form>
+    </div>
+
+    <!-- Halaman Preview Nota -->
+    <div class="page" id="nota-preview-page">
+        <button class="back-btn" onclick="showPage('nota-page')">
+            <span>←</span> Kembali ke Form
+        </button>
         
-        <!-- Tampilan Nota -->
-        <div class="nota-container" id="nota-preview" style="display: none;">
+        <div class="logo">
+            <h1>PREVIEW NOTA</h1>
+            <h2 id="preview-company-name">Berkah Dua Putri</h2>
+        </div>
+        
+        <div class="nota-container" id="nota-preview">
             <div class="nota-header">
                 <h2>NOTA PENJUALAN</h2>
                 <p id="nota-company-detail">Berkah Dua Putri</p>
@@ -690,6 +669,10 @@
             <span>←</span> Kembali
         </button>
         
+        <div class="logo">
+            <h1>CATAT PENGELUARAN</h1>
+        </div>
+        
         <form id="pengeluaran-form">
             <div class="form-group">
                 <label for="kategori">Kategori Pengeluaran</label>
@@ -730,6 +713,10 @@
             <span>←</span> Kembali
         </button>
         
+        <div class="logo">
+            <h1>STATISTIK KEUANGAN</h1>
+        </div>
+        
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-value">Rp <span id="stat-pendapatan">0</span></div>
@@ -765,6 +752,10 @@
         <button class="back-btn" onclick="showPage('main-page')">
             <span>←</span> Kembali
         </button>
+        
+        <div class="logo">
+            <h1>LAPORAN KEUANGAN</h1>
+        </div>
         
         <div class="form-group">
             <label for="periode-laporan">Pilih Periode</label>
@@ -824,17 +815,15 @@
         const DB_NAME = 'FinanceManagerDB';
         const DB_VERSION = 1;
         const STORE_NAMES = {
-            USERS: 'users',
             COMPANY: 'company',
-            TRANSACTIONS: 'transactions',
-            SETTINGS: 'settings'
+            TRANSACTIONS: 'transactions'
         };
 
         let db = null;
-        let currentUser = null;
         let companyInfo = null;
         let transactions = [];
         let notaCounter = 1;
+        let currentNotaData = null;
 
         // Initialize Database
         function initDB() {
@@ -856,11 +845,6 @@
                     const database = event.target.result;
 
                     // Create object stores if they don't exist
-                    if (!database.objectStoreNames.contains(STORE_NAMES.USERS)) {
-                        const userStore = database.createObjectStore(STORE_NAMES.USERS, { keyPath: 'id', autoIncrement: true });
-                        userStore.createIndex('username', 'username', { unique: true });
-                    }
-
                     if (!database.objectStoreNames.contains(STORE_NAMES.COMPANY)) {
                         database.createObjectStore(STORE_NAMES.COMPANY, { keyPath: 'id' });
                     }
@@ -869,10 +853,6 @@
                         const transactionStore = database.createObjectStore(STORE_NAMES.TRANSACTIONS, { keyPath: 'id', autoIncrement: true });
                         transactionStore.createIndex('date', 'date', { unique: false });
                         transactionStore.createIndex('type', 'type', { unique: false });
-                    }
-
-                    if (!database.objectStoreNames.contains(STORE_NAMES.SETTINGS)) {
-                        database.createObjectStore(STORE_NAMES.SETTINGS, { keyPath: 'key' });
                     }
                 };
             });
@@ -902,56 +882,6 @@
             });
         }
 
-        // Generic function to get data by key
-        function getDataByKey(storeName, key) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.get(key);
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        // Generic function to update data
-        function updateData(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.put(data);
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        // Settings functions
-        function getSetting(key) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAMES.SETTINGS], 'readonly');
-                const store = transaction.objectStore(STORE_NAMES.SETTINGS);
-                const request = store.get(key);
-
-                request.onsuccess = () => {
-                    const result = request.result;
-                    resolve(result ? result.value : null);
-                };
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function updateSetting(key, value) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAMES.SETTINGS], 'readwrite');
-                const store = transaction.objectStore(STORE_NAMES.SETTINGS);
-                const request = store.put({ key: key, value: value });
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
         // Initialize application
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -962,24 +892,16 @@
                 document.getElementById('tanggal').valueAsDate = new Date();
                 document.getElementById('tanggal-pengeluaran').valueAsDate = new Date();
                 
-                // Check if user is logged in
-                const savedUser = await getSetting('currentUser');
+                // Check if company info exists
                 const savedCompany = await getAllData(STORE_NAMES.COMPANY);
                 
-                if (savedUser) {
-                    currentUser = savedUser;
-                    
-                    if (savedCompany.length > 0) {
-                        companyInfo = savedCompany[0];
-                        showPage('main-page');
-                        await updateCompanyInfo();
-                        await updateLastLogin();
-                        await loadTransactions();
-                    } else {
-                        showPage('setup-page');
-                    }
+                if (savedCompany.length > 0) {
+                    companyInfo = savedCompany[0];
+                    showPage('main-page');
+                    await updateCompanyInfo();
+                    await loadTransactions();
                 } else {
-                    showPage('login-page');
+                    showPage('setup-page');
                 }
                 
                 // Update statistics and reports
@@ -1010,49 +932,6 @@
             // Jika pindah ke halaman laporan, update data
             if (pageId === 'laporan-page') {
                 updateLaporan();
-            }
-        }
-
-        // Fungsi login dengan IndexedDB
-        async function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                showNotification('Harap isi username dan password!', 'error');
-                return;
-            }
-
-            showLoading('login');
-            
-            try {
-                currentUser = {
-                    username: username,
-                    loginTime: new Date().toLocaleString()
-                };
-
-                // Save user to settings
-                await updateSetting('currentUser', currentUser);
-                
-                // Check if company info exists
-                const companyData = await getAllData(STORE_NAMES.COMPANY);
-                
-                if (companyData.length > 0) {
-                    companyInfo = companyData[0];
-                    showPage('main-page');
-                    await updateCompanyInfo();
-                } else {
-                    showPage('setup-page');
-                }
-                
-                await updateLastLogin();
-                showNotification('Login berhasil!', 'success');
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                showNotification('Error saat login: ' + error.message, 'error');
-            } finally {
-                hideLoading('login');
             }
         }
 
@@ -1093,6 +972,7 @@
             
             // Update di halaman nota
             document.getElementById('nota-company-name').textContent = companyInfo.name;
+            document.getElementById('preview-company-name').textContent = companyInfo.name;
             document.getElementById('nota-company-name-preview').textContent = companyInfo.name;
             document.getElementById('nota-company-detail').textContent = companyInfo.name;
             document.getElementById('nota-company-address').textContent = companyInfo.address;
@@ -1102,27 +982,6 @@
             document.getElementById('pengeluaran-company-name').textContent = companyInfo.name;
             document.getElementById('statistik-company-name').textContent = companyInfo.name;
             document.getElementById('laporan-company-name').textContent = companyInfo.name;
-        }
-
-        // Fungsi logout
-        async function logout() {
-            try {
-                await updateSetting('currentUser', null);
-                currentUser = null;
-                document.getElementById('username').value = '';
-                document.getElementById('password').value = '';
-                showPage('login-page');
-            } catch (error) {
-                console.error('Logout error:', error);
-                showNotification('Error saat logout: ' + error.message, 'error');
-            }
-        }
-
-        // Update last login
-        function updateLastLogin() {
-            if (currentUser && currentUser.loginTime) {
-                document.getElementById('last-login').textContent = currentUser.loginTime;
-            }
         }
 
         // Load transactions from IndexedDB
@@ -1154,7 +1013,7 @@
             savePengeluaran();
         });
 
-        // Generate nota
+        // Generate nota dan pindah ke halaman preview
         function generateNota() {
             const customer = document.getElementById('nama-pelanggan').value;
             const date = document.getElementById('tanggal').value;
@@ -1170,7 +1029,19 @@
                 year: 'numeric'
             });
             
-            // Update tampilan nota
+            // Simpan data nota untuk preview
+            currentNotaData = {
+                customer: customer,
+                date: date,
+                formattedDate: formattedDate,
+                product: product,
+                quantity: quantity,
+                price: price,
+                total: total,
+                notaNumber: notaCounter
+            };
+            
+            // Update tampilan nota di halaman preview
             document.getElementById('nota-number').textContent = String(notaCounter).padStart(3, '0');
             document.getElementById('nota-date').textContent = formattedDate;
             document.getElementById('nota-customer').textContent = customer;
@@ -1189,13 +1060,10 @@
             // Update total
             document.getElementById('nota-total').textContent = total.toLocaleString('id-ID');
             
-            // Tampilkan nota
-            document.getElementById('nota-preview').style.display = 'block';
+            // Pindah ke halaman preview nota
+            showPage('nota-preview-page');
             
-            // Scroll ke nota
-            document.getElementById('nota-preview').scrollIntoView({ behavior: 'smooth' });
-            
-            showNotification('Nota berhasil dibuat!', 'success');
+            showNotification('Nota berhasil dibuat! Silahkan simpan atau export sebagai gambar.', 'success');
         }
 
         // Simpan nota ke IndexedDB
@@ -1203,27 +1071,34 @@
             showLoading('save-nota');
             
             try {
+                if (!currentNotaData) {
+                    throw new Error('Tidak ada data nota untuk disimpan');
+                }
+                
                 const transaction = {
                     type: 'penjualan',
-                    customer: document.getElementById('nama-pelanggan').value,
-                    date: document.getElementById('tanggal').value,
-                    product: document.getElementById('produk').value,
-                    quantity: parseInt(document.getElementById('jumlah').value),
-                    price: parseInt(document.getElementById('harga').value),
-                    total: parseInt(document.getElementById('jumlah').value) * parseInt(document.getElementById('harga').value),
+                    customer: currentNotaData.customer,
+                    date: currentNotaData.date,
+                    product: currentNotaData.product,
+                    quantity: currentNotaData.quantity,
+                    price: currentNotaData.price,
+                    total: currentNotaData.total,
                     timestamp: new Date().toISOString(),
-                    notaNumber: notaCounter
+                    notaNumber: currentNotaData.notaNumber
                 };
                 
                 await addData(STORE_NAMES.TRANSACTIONS, transaction);
                 await loadTransactions(); // Reload transactions
                 
+                notaCounter++;
+                currentNotaData = null;
+                
                 showNotification('Nota berhasil disimpan!', 'success');
                 
-                // Reset form
+                // Reset form dan kembali ke halaman utama
                 document.getElementById('nota-form').reset();
-                document.getElementById('nota-preview').style.display = 'none';
                 document.getElementById('tanggal').valueAsDate = new Date();
+                showPage('main-page');
                 
                 // Update statistik dan laporan
                 await updateStats();
